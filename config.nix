@@ -15,9 +15,9 @@ let
   in {
     options = {
       path = mkOption rec {
-        type = types.path;
-        #default = "/etc/${name}.creds";
-        default = null;
+        type = types.str;
+        default = "/etc/${name}.creds";
+        #default = null;
         defaultText = default;
         description = "path the encrypted secret will be written to";
       };
