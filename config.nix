@@ -4,7 +4,6 @@
 #     vault = "Business";
 #     item = "hetzner-robot-api"; #defaults to ${name}
 #     fields = [ "username" "credentials" ];
-#     formatter = {username, credentials}: "${username}:${credentials}";
 #   };
 # }
 
@@ -17,7 +16,8 @@ let
     options = {
       path = mkOption rec {
         type = types.path;
-        default = "/etc/${name}.creds";
+        #default = "/etc/${name}.creds";
+        default = "";
         defaultText = default;
         description = "path the encrypted secret will be written to";
       };
@@ -31,7 +31,8 @@ let
 
         item = mkOption rec {
           type = types.str;
-          default = "${name}";
+          #default = "${name}";
+          default = "";
           defaultText = default;
           description = "item inside the vault the secret is stored in";
         };
