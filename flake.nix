@@ -22,10 +22,10 @@
         {
           secrets.my-secret = {
             path = "/etc/bla";
-            #source = {
-            #  vault = "my-vault";
-            #  fields = ["user" "pass"];
-            #};
+            source = {
+              vault = "my-vault";
+              fields = ["user" "pass"];
+            };
           };
         }
       ];

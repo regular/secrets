@@ -53,27 +53,41 @@ in {
     description = "Named instances of secrets";
   };
 
+  options.secrets-scripts = lib.mkOption {
+    type = lib.types.attrsOf lib.types.str;
+    internal = true;
+    default = {};
+  };
+
   # Consume the submodule configurations
   config = let
-    text = builtins.concatStringsSep "\n" ([ "# Add secrets to locl machine" ] ++ lines);
-    lines = attrValues (mapAttrs' (name: cfg: let
-      path = "${if cfg.path == null then "/etc/${name}.creds" else cfg.path}";
-      item = if cfg.source.item == null then name else cfg.source.item;
+    mkScript = comment: deco: let
       secrets = "${package}/bin/secrets";
-      systemd-creds = "${pkgs.systemd}/bin/systemd-creds";
-    in 
-    with builtins; {
-      inherit name;
-      value = "${secrets} get '${cfg.source.vault}' '${item}' ${toString (map (x: "'${x}'") cfg.source.fields)} --delimiter '${cfg.source.delimiter}' " +
-      "| ${systemd-creds} encrypt - '${path}'";
-    }) config.secrets);
+      lines = attrValues (mapAttrs' (name: cfg: let
+        path = "${if cfg.path == null then "/etc/${name}.creds" else cfg.path}";
+        item = if cfg.source.item == null then name else cfg.source.item;
+        save-cmd = deco "sudo systemd-creds encrypt - '${path}'";
+      in {
+        inherit name;
+        value = with builtins; 
+          "$secrets get '${cfg.source.vault}' '${item}' ${toString (map (x: "'${x}'") cfg.source.fields)} --delimiter '${cfg.source.delimiter}' " +
+          "| ${save-cmd}";
+      }) config.secrets);
+    in
+    builtins.concatStringsSep "\n" ([ 
+      "#!${pkgs.bash}/bin/bash"
+      "set +eux"
+      ""
+      comment
+      ""
+      "secrets=\"${secrets}\""
+    ] ++ lines);
   in {
-    warnings = [
-      (builtins.trace "Secrets script:\n ${text}\n" "rendered secrets scripts")
-    ];
+    secrets-scripts.import = mkScript "# Add secrets to local machine" (x: x);
+    secrets-scripts.send = mkScript "# Send secrets to remote machine" (x: "ssh ${config.networking.hostName} \"${x}\"");
     environment.systemPackages = [
       (pkgs.writeScriptBin "import-secrets" ''
-      ${text}
+      ${config.secrets-scripts.import}
       '')
     ];
   };
