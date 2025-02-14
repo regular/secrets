@@ -11,7 +11,7 @@
 { package }: { config, lib, pkgs, ... }: 
 with lib;
 let 
-  instance = name: let 
+  secretsInstance = name: let 
     crg = config.secrets.${name};
   in {
     options = {
