@@ -15,32 +15,25 @@ let
   in {
     options = {
       path = mkOption rec {
-        type = types.nullOr type.str;
-        #default = "/etc/${name}.creds";
+        type = types.nullOr types.str;
+        # if this is uncommented name evals to the entire config! (wtf)
         default = null;
-        defaultText = default;
-        description = "path the encrypted secret will be written to";
+        description = "path the encrypted secret will be written to. Defaults to /etc/$name.creds";
       };
       source = {
         vault = mkOption {
           type = types.str;
-          default = "";
-          defaultText = "";
           description = "vault the secret is stored in";
         };
 
         item = mkOption rec {
-          type = types.str;
-          #default = "${name}";
-          default = "";
-          defaultText = default;
-          description = "item inside the vault the secret is stored in";
+          type = types.nullOr types.str;
+          default = null;
+          description = "item inside the vault the secret is stored in. Defaults to $name";
         };
 
         fields = mkOption {
-          type = types.listOf types.str;
-          default = [];
-          defaultText = "[]";
+          type = lib.types.nonEmptyListOf lib.types.str;
           description = "list of fields in the item";
         };
 
@@ -60,21 +53,27 @@ in {
     description = "Named instances of secrets";
   };
 
-   # Consume the submodule configurations
-   config = let
-     lines = attrValues (mapAttrs' (name: cfg: let
-       path = "${cfg.path}" or "/etc/${name}.creds";
-       item = cfg.item or name;
-       secrets = "${package}/bin/secrets";
-     in {
-       inherit name;
-       value = "${secrets} get ${cfg.valut} ${cfg.item} ${builtins.toString cfg.fields} --delimiter '${cfg.delimiter}' " +
-               "| ${systemd-creds} encrypt - ${path}";
-      }) config.secrets);
-   in {
+  # Consume the submodule configurations
+  config = let
+    text = builtins.concatStringsSep "\n" ([ "# Add secrets to locl machine" ] ++ lines);
+    lines = attrValues (mapAttrs' (name: cfg: let
+      path = "${if cfg.path == null then "/etc/${name}.creds" else cfg.path}";
+      item = if cfg.source.item == null then name else cfg.source.item;
+      secrets = "${package}/bin/secrets";
+      systemd-creds = "${pkgs.systemd}/bin/systemd-creds";
+    in 
+    with builtins; {
+      inherit name;
+      value = "${secrets} get '${cfg.source.vault}' '${item}' ${toString (map (x: "'${x}'") cfg.source.fields)} --delimiter '${cfg.source.delimiter}' " +
+      "| ${systemd-creds} encrypt - '${path}'";
+    }) config.secrets);
+  in {
+    warnings = [
+      (builtins.trace "Secrets script:\n ${text}\n" "rendered secrets scripts")
+    ];
     environment.systemPackages = [
       (pkgs.writeScriptBin "import-secrets" ''
-        ${foldl (a: b: a + b + "\n")  "# Add secrets to locl machine"}
+      ${text}
       '')
     ];
   };

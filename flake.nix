@@ -14,6 +14,22 @@
     nixosModules.secrets = (import ./config.nix) {
       package = self.packages.${system}.default;
     };
+
+    nixosConfigurations.demo = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        self.nixosModules.secrets 
+        {
+          secrets.my-secret = {
+            path = "/etc/bla";
+            #source = {
+            #  vault = "my-vault";
+            #  fields = ["user" "pass"];
+            #};
+          };
+        }
+      ];
+    };
     
     packages.${system} = rec {
       default = pkgs.buildNpmPackage rec {
