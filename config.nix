@@ -61,8 +61,7 @@ in {
 
   # Consume the submodule configurations
   config = let
-    mkScript = comment: deco: let
-      secrets = "${package}/bin/secrets";
+    mkScript = secretsBin: comment: deco: let
       lines = attrValues (mapAttrs' (name: cfg: let
         path = "${if cfg.path == null then "/etc/${name}.creds" else cfg.path}";
         item = if cfg.source.item == null then name else cfg.source.item;
@@ -75,16 +74,15 @@ in {
       }) config.secrets);
     in
     builtins.concatStringsSep "\n" ([ 
-      "#!${pkgs.bash}/bin/bash"
       "set +eux"
       ""
       comment
       ""
-      "secrets=\"${secrets}\""
-    ] ++ lines);
+      "secrets=\"${secretsBin}\""
+    ] ++ lines ++ []);
   in {
-    secrets-scripts.import = mkScript "# Add secrets to local machine" (x: x);
-    secrets-scripts.send = mkScript "# Send secrets to remote machine" (x: "ssh ${config.networking.hostName} \"${x}\"");
+      secrets-scripts.import = mkScript "${package}/bin/secrets" "# Add secrets to local machine" (x: x);
+    secrets-scripts.send = mkScript "secrets" "# Send secrets to remote machine" (x: "ssh ${config.networking.hostName} \"${x}\"");
     environment.systemPackages = [
       (pkgs.writeScriptBin "import-secrets" ''
       ${config.secrets-scripts.import}
