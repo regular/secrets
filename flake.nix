@@ -15,6 +15,7 @@
       };
     in
   {
+    nixosModules.default  = self.nixosModules.secrets;
     nixosModules.secrets = (import ./config.nix) {
       package = self.packages.${system}.default;
     };
