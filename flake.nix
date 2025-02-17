@@ -17,9 +17,7 @@
   {
     nixosModules.default  = self.nixosModules.secrets;
     nixosModules.secrets = (import ./config.nix) {
-      environment.systemPackages = [
-        self.packages.${system}.default
-      ];
+      package = self.packages.${system}.default;
     };
 
     nixosConfigurations.demo = nixpkgs.lib.nixosSystem {

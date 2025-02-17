@@ -81,9 +81,10 @@ in {
       "secrets=\"${secretsBin}\""
     ] ++ lines ++ []);
   in {
-      secrets-scripts.import = mkScript "${package}/bin/secrets" "# Add secrets to local machine" (x: x);
+    secrets-scripts.import = mkScript "${package}/bin/secrets" "# Add secrets to local machine" (x: x);
     secrets-scripts.send = mkScript "secrets" "# Send secrets to remote machine" (x: "ssh ${config.networking.hostName} \"${x}\"");
     environment.systemPackages = [
+      package
       (pkgs.writeScriptBin "import-secrets" ''
       ${config.secrets-scripts.import}
       '')
