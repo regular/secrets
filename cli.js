@@ -30,7 +30,8 @@ const {getFromOnePassword} = require('./lib/scripts')(Object.assign({
 */
 
 const {getFromSecretsService} = require('./lib/scripts')(Object.assign({
-  PATH: process.env.PATH
+  PATH: process.env.PATH,
+  SSH_AUTH_SOCK: process.env.SSH_AUTH_SOCK  // for sudo via agent
 }, config.bin))
 
 async function main(conf) {
@@ -39,8 +40,13 @@ async function main(conf) {
   }
   const [verb, vault, item, ...fields] = conf._
   if (verb == 'get') {
-    const result = await getFromSecretsService(vault, item, fields)
-    console.log(result.join(conf.delimiter))
+    try {
+      const result = await getFromSecretsService(vault, item, fields)
+      process.stdout.write(result.join(conf.delimiter))
+    } catch (err) {
+      console.error(err.message)
+      process.exit(1)
+    }
   }
 }
 
