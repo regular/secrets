@@ -18,6 +18,7 @@ for(const d of Scripts.deps) {
   if (!config.bin || !config.bin[d]) bail(new Error(`--bin.${d} missing`))
 }
 
+/*
 const OP_SESSION = Object.keys(process.env).find(name=>name.startsWith('OP_SESSION_'))
 if (!OP_SESSION) bail(new Error('no environment variable starting with OP_SESSION found.'))
 
@@ -26,6 +27,11 @@ const {getFromOnePassword} = require('./lib/scripts')(Object.assign({
   XDG_CONFIG_DIRS: process.env.XDG_CONFIG_DIRS,
   HOME: process.env.HOME
 }, config.bin))
+*/
+
+const {getFromSecretsService} = require('./lib/scripts')(Object.assign({
+  PATH: process.env.PATH
+}, config.bin))
 
 async function main(conf) {
   if (conf._.length < 4) {
@@ -33,7 +39,7 @@ async function main(conf) {
   }
   const [verb, vault, item, ...fields] = conf._
   if (verb == 'get') {
-    const result = await getFromOnePassword(vault, item, fields)
+    const result = await getFromSecretsService(vault, item, fields)
     console.log(result.join(conf.delimiter))
   }
 }

@@ -1,8 +1,12 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    secrets-service = {
+      url = "github:regular/secrets-service";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = inputs@{ self, nixpkgs, ... }:
+  outputs = inputs@{ self, nixpkgs, secrets-service }:
     let
       system =  "x86_64-linux";
       pkgs = import nixpkgs { 
@@ -48,7 +52,6 @@
           --set ${name}_bin__op ${pkgs._1password-cli}/bin/op
         '';
       };
-
     };
 
     devShells.${system}.default = pkgs.mkShell {
