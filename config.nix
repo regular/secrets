@@ -74,7 +74,7 @@ in {
       }) config.secrets);
     in
     builtins.concatStringsSep "\n" ([ 
-      "set +euxo pipefail"
+      "set -euxo pipefail"
       ""
       comment
       ""
