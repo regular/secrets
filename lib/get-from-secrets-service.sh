@@ -1,3 +1,4 @@
+set -x
 VAULT="$1"
 ITEM="$2"
 FIELD="$3"
