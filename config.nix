@@ -65,7 +65,7 @@ in {
       lines = attrValues (mapAttrs' (name: cfg: let
         path = "${if cfg.path == null then "/etc/${name}.creds" else cfg.path}";
         item = if cfg.source.item == null then name else cfg.source.item;
-        save-cmd = deco "sudo mkdir -p $(dirname ${path}) && udo systemd-creds encrypt - ${path}";
+        save-cmd = deco "sudo mkdir -p $(dirname ${path}) && sudo systemd-creds encrypt - ${path}";
       in {
         inherit name;
         value = with builtins; 
